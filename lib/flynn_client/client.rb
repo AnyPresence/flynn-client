@@ -52,14 +52,14 @@ module FlynnClient
     def run_command(app_id, command)
       raise "Missing app_id!" if app_id.nil?
       raise "Missing command!" if command.nil?
+      app_jobs =  app_jobs_path(app_id)
       release = get_release(app_id)
       payload = {"release": release.fetch("id"), "cmd":[command], "release_env": true}
-      job_response = @controller.post(path: app_jobs_path(app_id), headers: headers, body: payload.to_json)
+      job_response = @controller.post(path: app_jobs, headers: headers, body: payload.to_json)
       job_result = JSON.parse job_response.body
       if job_response.status == 200
         job_id = job_result.fetch("id")
-        job_status = @controller.get(path: "#{app_jobs_path(app_id)}/#{job_id}", headers: headers)
-        JSON.parse job_status.body
+        @controller.get(path: "#{app_jobs}/#{job_id}", headers: headers)
       else
         raise "Failed to submit job to run command\n#{job_response}"
       end
