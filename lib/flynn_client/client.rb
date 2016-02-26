@@ -4,6 +4,7 @@ module FlynnClient
   class Client
     REQUEST_TIMEOUT = 180 #seconds
     VERIFY_SSL = false
+    MAX_RETRIES = 100
 
     def initialize(host, admin_username, admin_password, mock=false)
       raise "Missing host!" if host.nil?
@@ -58,12 +59,7 @@ module FlynnClient
       job_result = JSON.parse job_response.body
       if job_response.status == 200
         job_id = job_result.fetch("id")
-        state = get_job(app_id, job_id).fetch("state")
-        while %w[pending starting up down crashed failed].include?(state)
-          return true if state == 'down'
-          raise "Command failed to run correctly." if %w[crashed failed].include?(state)
-          state = get_job(app_id, job_id).fetch("state")
-        end
+        wait_for_job(app_id, job_id)
       else
         raise "Failed to submit job to run command\n#{job_response}"
       end
@@ -153,11 +149,27 @@ module FlynnClient
 
     private
 
+    def wait_for_job(app_id, job_id)
+      job = get_job(app_id, job_id)
+      counter = 0
+      until job.has_key?("exit_status")
+        counter = counter + 1
+        raise "Wait counter exhausted" if counter >= MAX_RETRIES
+        sleep 30
+        job = get_job(app_id, job_id)
+      end
+
+      if job.fetch("exit_status").to_i == 0
+        return "Success!"
+      else
+        response = @controller.get(path: app_log_path(app_id), headers: headers, body: {"job_id": job.fetch("uuid")}.to_json)
+        raise "Status code: #{job.fetch('exit_status')} #{job.state}\n#{response.body}"
+      end
+    end
+
     def get_job(app_id, job_id)
       result = @controller.get(path: "#{app_jobs_path(app_id)}/#{job_id}", headers: headers)
-      job = JSON.parse result.body
-      puts "\nJob is #{job.inspect}"
-      return job
+      JSON.parse result.body
     end
 
     def get_release(app_id)
