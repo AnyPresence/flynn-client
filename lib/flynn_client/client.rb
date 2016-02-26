@@ -49,6 +49,22 @@ module FlynnClient
       response.body
     end
 
+    def run_command(app_id, command)
+      raise "Missing app_id!" if app_id.nil?
+      raise "Missing command!" if command.nil?
+      release = get_release(app_id)
+      payload = {"release": release.fetch("id"), "cmd":[command], "release_env": true}
+      job_response = @controller.post(path: app_jobs_path(app_id), headers: headers, body: payload.to_json)
+      job_result = JSON.parse job_response.body
+      if job_response.status == 200
+        job_id = job_result.fetch("id")
+        job_status = @controller.get(path: "#{app_jobs_path(app_id)}/#{job_id}", headers: headers)
+        JSON.parse job_status.body
+      else
+        raise "Failed to submit job to run command\n#{job_response}"
+      end
+    end
+
     def get_config(app_id)
       raise "Missing app_id!" if app_id.nil?
       release = get_release(app_id)
@@ -176,6 +192,10 @@ module FlynnClient
           puts "\nERROR #{e.message}\n#{e.response.inspect}"
         end
       end
+    end
+
+    def app_jobs_path(app_id)
+      "#{app_path(app_id)}/jobs"
     end
 
     def app_formation_path(app_id, formation_id)
