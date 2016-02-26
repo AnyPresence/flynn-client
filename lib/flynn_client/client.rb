@@ -147,7 +147,11 @@ module FlynnClient
 
     def get_release(app_id)
       response = @controller.get(path: app_release_path(app_id), headers: headers)
-      JSON.parse response.body
+      if response.body.nil? || response.body.to_s.strip.length == 0
+        return Hash.new
+      else
+        JSON.parse response.body
+      end
     end
 
     def get_formations(app_id)
