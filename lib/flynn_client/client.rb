@@ -75,7 +75,6 @@ module FlynnClient
     def set_config(app_id, hash)
       raise "Missing app_id!" if app_id.nil?
       release = get_release(app_id)
-      puts "\nRelease is #{release.inspect}"
       release.delete("id")
       if release.has_key?("env")
         release["env"].merge!(hash)
