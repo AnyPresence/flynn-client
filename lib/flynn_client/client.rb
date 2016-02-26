@@ -75,7 +75,11 @@ module FlynnClient
       raise "Missing app_id!" if app_id.nil?
       release = get_release(app_id)
       release.delete("id")
-      release["env"].merge!(hash)
+      if release.has_key?("env")
+        release["env"].merge!(hash)
+      else
+        release = hash
+      end
       # First, create a new release of the app using the new environment variables
       release_response = @controller.post(path: releases_path, headers: headers, body: release.to_json)
       release_result = JSON.parse release_response.body
