@@ -1,0 +1,23 @@
+PATH
+  remote: .
+  specs:
+    flynn-client (0.1.0)
+      bundler (~> 1.5)
+      excon (~> 0.45.4)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    excon (0.45.4)
+    power_assert (0.2.7)
+    rake (10.5.0)
+    test-unit (3.1.7)
+      power_assert
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  flynn-client!
+  rake
+  test-unit
