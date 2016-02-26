@@ -52,15 +52,18 @@ module FlynnClient
     def run_command(app_id, command)
       raise "Missing app_id!" if app_id.nil?
       raise "Missing command!" if command.nil?
-      app_jobs =  app_jobs_path(app_id)
       release = get_release(app_id)
-      payload = {"release": release.fetch("id"), "cmd":[command]}
-      job_response = @controller.post(path: app_jobs, headers: headers, body: payload.to_json)
+      payload = {"release": release.fetch("id"), "cmd":[command], "tty": true, "release_env": true}
+      job_response = @controller.post(path: app_jobs_path(app_id), headers: headers, body: payload.to_json)
       job_result = JSON.parse job_response.body
       if job_response.status == 200
         job_id = job_result.fetch("id")
-        result = @controller.get(path: "#{app_jobs}/#{job_id}", headers: headers)
-        JSON.parse result.body
+        state = get_job(app_id, job_id).fetch("state")
+        while %w[pending starting up down crashed failed].include?(state)
+          return true if state == 'down'
+          raise "Command failed to run correctly." if %w[crashed failed].include?(state)
+          state = get_job(app_id, job_id).fetch("state")
+        end
       else
         raise "Failed to submit job to run command\n#{job_response}"
       end
@@ -149,6 +152,13 @@ module FlynnClient
     end
 
     private
+
+    def get_job(app_id, job_id)
+      result = @controller.get(path: "#{app_jobs_path(app_id)}/#{job_id}", headers: headers)
+      job = JSON.parse result.body
+      puts "\nJob is #{job.inspect}"
+      return job
+    end
 
     def get_release(app_id)
       response = @controller.get(path: app_release_path(app_id), headers: headers)
