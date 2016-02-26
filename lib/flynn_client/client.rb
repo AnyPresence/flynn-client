@@ -78,7 +78,7 @@ module FlynnClient
       if release.has_key?("env")
         release["env"].merge!(hash)
       else
-        release = hash
+        release["env"] = hash
       end
       # First, create a new release of the app using the new environment variables
       release_response = @controller.post(path: releases_path, headers: headers, body: release.to_json)
