@@ -56,11 +56,11 @@ module FlynnClient
       raise "Missing command!" if command.nil?
       release = get_release(app_id)
       payload = {"release" => release.fetch("id"), "cmd" => [command], "env" => release.fetch("env"), "tty" => true, "release_env" => true, "disable_log" => false}
+      puts "\nSending payload:\n#{payload.inspect}"
       job_response = @controller.post(path: app_jobs_path(app_id), headers: headers, body: payload.to_json)
-      job_result = JSON.parse job_response.body
       if job_response.status == 200
-        job_id = job_result.fetch("id")
-        wait_for_job(app_id, job_id)
+        job_result = JSON.parse job_response.body
+        wait_for_job(app_id, job_result.fetch("id"))
       else
         raise "Failed to submit job to run command\n#{job_response}"
       end
