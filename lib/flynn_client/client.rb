@@ -5,6 +5,7 @@ module FlynnClient
     REQUEST_TIMEOUT = 180 #seconds
     VERIFY_SSL = false
     MAX_RETRIES = 100
+    JOB_POLL_INTERVAL = 10
 
     def initialize(host, admin_username, admin_password, mock=false)
       raise "Missing host!" if host.nil?
@@ -155,11 +156,11 @@ module FlynnClient
       until job.has_key?("exit_status")
         counter = counter + 1
         raise "Wait counter exhausted" if counter >= MAX_RETRIES
-        sleep 30
+        sleep JOB_POLL_INTERVAL
         job = get_job(app_id, job_id)
       end
 
-      if job.fetch("exit_status").to_i == 0
+      if job.fetch("exit_status") == 0
         return "Success!"
       else
         response = @controller.get(path: app_log_path(app_id), headers: headers, body: {"job_id": job.fetch("uuid")}.to_json)
