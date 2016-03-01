@@ -105,6 +105,12 @@ module FlynnClient
       scale_process(app_id, "worker", count)
     end
 
+    def scale_clock(app_id, count)
+      raise "Missing app_id!" if app_id.nil?
+      raise "Missing count!" unless count.is_a? Integer
+      scale_process(app_id, "clock", count)
+    end
+
     def ssl_domain_create(app_name, domain, certificate, private_key, sticky)
       raise "Missing app_name!" if app_name.nil?
       raise "Missing domain!" if domain.nil?
@@ -212,7 +218,7 @@ module FlynnClient
     end
 
     def scale_process(app_id, process_type, count)
-      raise "I don't know what to do with #{process_type}" unless ["web", "worker"].include?(process_type)
+      raise "I don't know what to do with #{process_type}" unless ["web", "worker", "clock"].include?(process_type)
       formation = get_current_formation(app_id)
       formation_id = formation.fetch('release') # This is actually the formation ID and NOT the release ID
       if formation["processes"].has_key?(process_type) && formation["processes"].fetch(process_type) != count
