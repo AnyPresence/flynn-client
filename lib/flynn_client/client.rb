@@ -165,11 +165,12 @@ module FlynnClient
         job = get_job(app_id, job_id)
       end
 
+      path = app_log_path(app_id) + "?job_id=#{job.fetch("id")}"
+      response = @controller.get(path: path, headers: headers)
+
       if job.fetch("exit_status") == 0
-        return "Success!"
+        return "Success:\n#{response.body}"
       else
-        path = app_log_path(app_id) + "?job_id=#{job.fetch("id")}"
-        response = @controller.get(path: path, headers: headers)
         raise "Status code: #{job.fetch('exit_status')} #{job.fetch('state')}\n#{response.body}"
       end
     end
