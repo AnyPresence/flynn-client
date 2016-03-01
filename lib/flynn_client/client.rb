@@ -55,7 +55,7 @@ module FlynnClient
       raise "Missing app_id!" if app_id.nil?
       raise "Missing command!" if command.nil?
       release = get_release(app_id)
-      payload = {"release" => release.fetch("id"), "cmd" => [command], "detached" => false, "release_env" => true}
+      payload = {"release" => release.fetch("id"), "cmd" => command.strip.split(/\w*/), "release_env" => true}
       job_response = @controller.post(path: app_jobs_path(app_id), headers: headers, body: payload.to_json)
       if job_response.status == 200
         job_result = JSON.parse job_response.body
