@@ -44,10 +44,15 @@ module FlynnClient
       results.all?
     end
 
-    def get_logs(app_id,stream=false)
+    def get_logs(app_id, streaming=false)
       raise "Missing app_id!" if app_id.nil?
-      log_headers = stream ? headers.merge({accept: 'text/event-stream'}) : headers
-      @controller.get(path: app_log_path(app_id), headers: log_headers)
+      log_path = app_log_path(app_id)
+      log_headers = headers
+      if streaming
+        log_headers.merge!({accept: 'text/event-stream'})
+        log_path += "?follow=true"
+      end
+      @controller.get(path: log_path, headers: log_headers)
     end
 
     def run_command(app_id, command)
