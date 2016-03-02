@@ -162,16 +162,15 @@ module FlynnClient
     private
 
     def wait_for_job(app_id, job_id)
-      job = get_job(app_id, job_id)
       counter = 0
-      until job.has_key?("exit_status")
+      exit_status = nil
+      while (exit_status = get_job(app_id, job_id)["exit_status"]) != 0
         counter = counter + 1
         raise "Wait counter exhausted" if counter >= MAX_RETRIES
         sleep JOB_POLL_INTERVAL
-        job = get_job(app_id, job_id)
       end
 
-      if job.fetch("exit_status") == 0
+      if exit_status == 0
         return "Success!"
       else
         path = app_log_path(app_id) + "?job_id=#{job.fetch("id")}"
@@ -182,7 +181,11 @@ module FlynnClient
 
     def get_job(app_id, job_id)
       result = @controller.get(path: "#{app_jobs_path(app_id)}/#{job_id}", headers: headers)
-      JSON.parse result.body if result.status == 200
+      if result.status == 200
+        JSON.parse result.body
+      else
+        {}
+      end
     end
 
     def get_release(app_id)
