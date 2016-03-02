@@ -5,7 +5,7 @@ module FlynnClient
     REQUEST_TIMEOUT = 180 #seconds
     VERIFY_SSL = false
     MAX_RETRIES = 100
-    JOB_POLL_INTERVAL = 10
+    JOB_POLL_INTERVAL = 3 #seconds
 
     def initialize(host, admin_username, admin_password, mock=false)
       raise "Missing host!" if host.nil?
