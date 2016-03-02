@@ -54,7 +54,7 @@ module FlynnClient
         @controller.get(path: log_path, headers: log_headers, response_block: block)
       else
         response = @controller.get(path: log_path, headers: log_headers)
-        JSON.parse response.body
+        response.body
       end
     end
 
