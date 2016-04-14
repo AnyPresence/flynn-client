@@ -94,7 +94,7 @@ module FlynnClient
         payload = {"id": release_result.fetch("id")}
         # Then, set app release to it
         response = @controller.put(path: app_release_path(app_id), headers: headers, body: payload.to_json)
-        response.status == 200
+        delete_old_formations(app_id, release_result.fetch("id")) if response.status == 200
       else
         false
       end
@@ -198,6 +198,13 @@ module FlynnClient
       end
     end
 
+    def delete_old_formations(app_id, formation_id_to_keep)
+      get_formations(app_id).each do |formation|
+        formation_id = formation.fetch('release')
+        delete_formation(app_id, formation_id) unless formation_id_to_keep == formation_id
+      end
+    end
+
     def get_formations(app_id)
       response = @controller.get(path: app_formations_path(app_id), headers: headers)
       JSON.parse response.body
@@ -211,6 +218,11 @@ module FlynnClient
     def get_formation(app_id, formation_id, expanded=false)
       response = @controller.get(path: app_formation_path(app_id, formation_id), headers: headers, query: { expanded: expanded})
       JSON.parse response.body
+    end
+
+    def delete_formation(app_id, formation_id)
+      response = @controller.delete(path: app_formation_path(app_id, formation_id), headers: headers)
+      response.status == 200
     end
 
     def get_route(app_name, domain)
