@@ -35,7 +35,7 @@ module FlynnClient
       raise "Missing app_id!" if app_id.nil?
       raise "Missing app_name!" if app_name.nil?
       formation = get_current_formation(app_id)
-      processes = formation.fetch("processes")
+      processes = formation.fetch("processes", {})
       results = []
       processes.each_pair do |process_type, process_count|
         results << scale_process(app_name, process_type, 0)
@@ -211,8 +211,13 @@ module FlynnClient
     end
 
     def get_current_formation(app_id)
-      formation_id = get_formations(app_id).first.fetch('release') # This is actually the formation ID and NOT the release ID
-      get_formation(app_id, formation_id)
+      current_formation = get_formations(app_id).first
+      if current_formation.nil?
+        {}
+      else
+        formation_id = current_formation.fetch('release') # This is actually the formation ID and NOT the release ID
+        get_formation(app_id, formation_id)
+      end
     end
 
     def get_formation(app_id, formation_id, expanded=false)
